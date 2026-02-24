@@ -13,13 +13,11 @@ public class DeepSeekService : IDeepSeekService
 {
     private readonly HttpClient _httpClient;
     private readonly ISettingsService _settingsService;
-    private readonly ILoggingService _logger;
 
-    public DeepSeekService(HttpClient httpClient, ISettingsService settingsService, ILoggingService logger)
+    public DeepSeekService(HttpClient httpClient, ISettingsService settingsService)
     {
         _httpClient = httpClient;
         _settingsService = settingsService;
-        _logger = logger;
     }
 
     public async IAsyncEnumerable<ChatChunk> StreamChatAsync(ChatRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
@@ -32,7 +30,7 @@ public class DeepSeekService : IDeepSeekService
     httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", settings.ApiKey);
     httpRequest.Content = JsonContent.Create(request);
 
-    _logger.Information("Отправка запроса к DeepSeek. Модель: {Model}", request.Model);
+    LoggingService.LogInformation("Отправка запроса к DeepSeek. Модель: {Model}", request.Model);
 
     using var response = await _httpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
     response.EnsureSuccessStatusCode();
@@ -59,7 +57,7 @@ public class DeepSeekService : IDeepSeekService
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, "Ошибка десериализации чанка: {Data}", data);
+                LoggingService.LogError(ex, "Ошибка десериализации чанка: {Data}", data);
                 continue;
             }
             if (chunk != null)

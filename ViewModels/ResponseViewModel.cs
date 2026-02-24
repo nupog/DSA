@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Windows.Input;
 using DeepSeekSurveyAnalyzer.Models;
+using DeepSeekSurveyAnalyzer.Services;
 using DeepSeekSurveyAnalyzer.Services.Abstractions;
 
 namespace DeepSeekSurveyAnalyzer.ViewModels;
@@ -12,7 +13,6 @@ namespace DeepSeekSurveyAnalyzer.ViewModels;
 public class ResponseViewModel : INotifyPropertyChanged
 {
     private readonly IDeepSeekService _deepSeek;
-    private readonly ILoggingService _logger;
     private readonly IHistoryService _historyService;
     private readonly ChatRequest _request;
     private readonly List<string> _files;
@@ -49,10 +49,9 @@ public class ResponseViewModel : INotifyPropertyChanged
     public ICommand CancelCommand { get; }
     public ICommand SaveAnswerCommand { get; }
 
-    public ResponseViewModel(IDeepSeekService deepSeek, ILoggingService logger, ChatRequest request, IHistoryService historyService, List<string> files)
+    public ResponseViewModel(IDeepSeekService deepSeek, ChatRequest request, IHistoryService historyService, List<string> files)
     {
         _deepSeek = deepSeek;
-        _logger = logger;
         _historyService = historyService;
         _request = request;
         _files = files;
@@ -106,11 +105,11 @@ public class ResponseViewModel : INotifyPropertyChanged
         catch (OperationCanceledException)
         {
             IsCancelled = true;
-            _logger.Information("Запрос отменён пользователем");
+            LoggingService.LogInformation("Запрос отменён пользователем");
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Ошибка при получении ответа");
+            LoggingService.LogError(ex, "Ошибка при получении ответа");
             System.Windows.MessageBox.Show($"Ошибка: {ex.Message}", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             IsCancelled = true;
         }
@@ -139,7 +138,7 @@ public class ResponseViewModel : INotifyPropertyChanged
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Ошибка сохранения файла");
+            LoggingService.LogError(ex, "Ошибка сохранения файла");
             System.Windows.MessageBox.Show($"Ошибка сохранения: {ex.Message}", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
         }
     }

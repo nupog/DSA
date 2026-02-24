@@ -17,6 +17,7 @@ public partial class App : Application
         var services = new ServiceCollection();
         ConfigureServices(services);
         _serviceProvider = services.BuildServiceProvider();
+        LoggingService.Init(_serviceProvider.GetRequiredService<IConfigurationService>());
     }
 
     private void ConfigureServices(IServiceCollection services)
@@ -29,10 +30,9 @@ public partial class App : Application
         services.AddSingleton<IConfigurationService>(sp => sp.GetRequiredService<SettingsService>());
         
         // Остальные сервисы
-        services.AddSingleton<ILoggingService, LoggingService>();
         services.AddSingleton<IHistoryService, HistoryService>();
         services.AddSingleton<FileReaderFactory>();
-        
+
         // ViewModels
         services.AddSingleton<MainViewModel>();
         services.AddSingleton<SettingsViewModel>();

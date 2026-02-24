@@ -9,11 +9,9 @@ namespace DeepSeekSurveyAnalyzer.Services;
 public class HistoryService : IHistoryService
 {
     private readonly string _connectionString;
-    private readonly ILoggingService _logger;
 
-    public HistoryService(ILoggingService logger)
+    public HistoryService()
     {
-        _logger = logger;
         var dbPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                                     "DeepSeekSurveyAnalyzer", "history.db");
         var dbDir = Path.GetDirectoryName(dbPath);
@@ -63,7 +61,7 @@ public class HistoryService : IHistoryService
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Ошибка сохранения истории");
+            LoggingService.LogError(ex, "Ошибка сохранения истории");
         }
     }
 
@@ -96,7 +94,7 @@ public class HistoryService : IHistoryService
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Ошибка загрузки истории");
+            LoggingService.LogError(ex, "Ошибка загрузки истории");
         }
         return entries;
     }

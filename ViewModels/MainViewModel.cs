@@ -15,7 +15,6 @@ public class MainViewModel : INotifyPropertyChanged
 {
     private readonly IDeepSeekService _deepSeek;
     private readonly ISettingsService _settings;
-    private readonly ILoggingService _logger;
     private readonly FileReaderFactory _fileReaderFactory;
     private string _promptText = string.Empty;
     private bool _isBusy;
@@ -51,13 +50,11 @@ public class MainViewModel : INotifyPropertyChanged
     public MainViewModel(
         IDeepSeekService deepSeek,
         ISettingsService settings,
-        ILoggingService logger,
         FileReaderFactory fileReaderFactory,
         IHistoryService historyService)
     {
         _deepSeek = deepSeek;
         _settings = settings;
-        _logger = logger;
         _fileReaderFactory = fileReaderFactory;
         _historyService = historyService;
 
@@ -108,7 +105,7 @@ public class MainViewModel : INotifyPropertyChanged
                     var reader = _fileReaderFactory.GetReader(file);
                     if (reader == null)
                     {
-                        _logger.Warning("Неподдерживаемый формат файла: {File}", file);
+                        LoggingService.LogWarning("Неподдерживаемый формат файла: {File}", file);
                         continue;
                     }
                     var text = await reader.ReadTextAsync(file, progress);
@@ -116,7 +113,7 @@ public class MainViewModel : INotifyPropertyChanged
                 }
                 catch (Exception ex)
                 {
-                    _logger.Error(ex, "Ошибка чтения файла: {File}", file);
+                    LoggingService.LogError(ex, "Ошибка чтения файла: {File}", file);
                     System.Windows.MessageBox.Show($"Ошибка чтения {file}: {ex.Message}", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
                 }
             }
@@ -139,7 +136,7 @@ public class MainViewModel : INotifyPropertyChanged
             };
 
             var responseWindow = new ResponseWindow();
-            var responseViewModel = new ResponseViewModel(_deepSeek, _logger, request, _historyService, SelectedFiles.ToList());
+            var responseViewModel = new ResponseViewModel(_deepSeek, request, _historyService, SelectedFiles.ToList());
             responseWindow.DataContext = responseViewModel;
             responseWindow.Show();
 
@@ -147,7 +144,7 @@ public class MainViewModel : INotifyPropertyChanged
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Ошибка отправки запроса");
+            LoggingService.LogError(ex, "Ошибка отправки запроса");
             System.Windows.MessageBox.Show($"Ошибка: {ex.Message}", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
         }
         finally
@@ -159,7 +156,7 @@ public class MainViewModel : INotifyPropertyChanged
     private void OpenSettings()
     {
         var settingsWindow = new SettingsWindow();
-        var settingsViewModel = new SettingsViewModel(_settings, _logger);
+        var settingsViewModel = new SettingsViewModel(_settings);
         settingsWindow.DataContext = settingsViewModel;
         settingsWindow.Owner = System.Windows.Application.Current.MainWindow;
         settingsWindow.ShowDialog();

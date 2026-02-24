@@ -8,11 +8,9 @@ namespace DeepSeekSurveyAnalyzer.Services;
 public class SettingsService : ISettingsService, IConfigurationService
 {
     private readonly string _settingsPath;
-    private readonly ILoggingService _logger;
 
-    public SettingsService(ILoggingService logger)
+    public SettingsService()
     {
-        _logger = logger;
         var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         var appFolder = Path.Combine(appData, "DeepSeekSurveyAnalyzer");
         Directory.CreateDirectory(appFolder);
@@ -33,8 +31,7 @@ public class SettingsService : ISettingsService, IConfigurationService
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Ошибка загрузки настроек");
-            return new AppSettings();
+            throw;
         }
     }
 
@@ -55,7 +52,6 @@ public class SettingsService : ISettingsService, IConfigurationService
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Ошибка сохранения настроек");
             throw;
         }
     }
