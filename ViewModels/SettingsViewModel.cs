@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
 using DeepSeekSurveyAnalyzer.Models;
+using DeepSeekSurveyAnalyzer.Services;
 using DeepSeekSurveyAnalyzer.Services.Abstractions;
 
 namespace DeepSeekSurveyAnalyzer.ViewModels;
@@ -9,7 +10,6 @@ namespace DeepSeekSurveyAnalyzer.ViewModels;
 public class SettingsViewModel : INotifyPropertyChanged
 {
     private readonly ISettingsService _settingsService;
-    private readonly ILoggingService _logger;
     private string _apiKey = string.Empty;
     private string _endpoint = string.Empty;
     private string _model = string.Empty;
@@ -42,10 +42,9 @@ public class SettingsViewModel : INotifyPropertyChanged
     public ICommand SaveCommand { get; }
     public ICommand CancelCommand { get; }
 
-    public SettingsViewModel(ISettingsService settingsService, ILoggingService logger)
+    public SettingsViewModel(ISettingsService settingsService)
     {
         _settingsService = settingsService;
-        _logger = logger;
 
         var settings = settingsService.Load();
         ApiKey = settings.ApiKey;
@@ -70,7 +69,7 @@ public class SettingsViewModel : INotifyPropertyChanged
             PromptText = _settingsService.Load().PromptText
         };
         _settingsService.Save(settings);
-        _logger.Information("Настройки сохранены");
+        LoggingService.LogInformation("Настройки сохранены");
         Close?.Invoke();
     }
 
