@@ -1,0 +1,44 @@
+<Window x:Class="DeepSeekSurveyAnalyzer.Views.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Настройки подключения к ИИ" Height="320" Width="500"
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <Label Grid.Row="0" Grid.Column="0" Content="API Key:" Margin="5"/>
+        <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding ApiKey}" Margin="5"/>
+
+        <Label Grid.Row="1" Grid.Column="0" Content="Endpoint:" Margin="5"/>
+        <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Endpoint}" Margin="5"/>
+
+        <Label Grid.Row="2" Grid.Column="0" Content="Модель:" Margin="5"/>
+        <ComboBox Grid.Row="2" Grid.Column="1" Margin="5" SelectedItem="{Binding Model}">
+            <ComboBoxItem Content="deepseek-chat" IsSelected="True"/>
+            <ComboBoxItem Content="deepseek-reasoner"/>
+        </ComboBox>
+
+        <Label Grid.Row="3" Grid.Column="0" Content="Уровень лога:" Margin="5"/>
+        <ComboBox Grid.Row="3" Grid.Column="1" Margin="5" SelectedItem="{Binding LogLevel}">
+            <ComboBoxItem Content="Debug"/>
+            <ComboBoxItem Content="Information"/>
+            <ComboBoxItem Content="Warning"/>
+            <ComboBoxItem Content="Error"/>
+        </ComboBox>
+
+        <StackPanel Grid.Row="4" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="5">
+            <Button Content="Сохранить" Command="{Binding SaveCommand}" Width="80" Margin="5"/>
+            <Button Content="Отмена" Command="{Binding CancelCommand}" Width="80" Margin="5"/>
+        </StackPanel>
+    </Grid>
+</Window>
