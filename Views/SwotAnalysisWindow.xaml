@@ -1,0 +1,34 @@
+<Window x:Class="DeepSeekSurveyAnalyzer.Views.SwotAnalysisWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="SWOT-анализ результатов" Height="600" Width="800"
+        WindowStartupLocation="CenterOwner">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="Размышления:" FontWeight="Bold"/>
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,5,0,10">
+            <TextBox Text="{Binding Reasoning, Mode=OneWay}" IsReadOnly="True" 
+                     TextWrapping="Wrap" FontFamily="Consolas" 
+                     Background="#F5F5F5" Padding="5"/>
+        </ScrollViewer>
+
+        <TextBlock Grid.Row="2" Text="SWOT-анализ:" FontWeight="Bold"/>
+        <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto" Margin="0,5,0,10">
+            <TextBox Text="{Binding SwotAnalysis, Mode=OneWay}" IsReadOnly="True" 
+                     TextWrapping="Wrap" FontFamily="Consolas" 
+                     Background="#F5F5F5" Padding="5"/>
+        </ScrollViewer>
+
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="Отмена" Command="{Binding CancelCommand}" Width="80" Margin="5"/>
+            <Button Content="Сохранить" Command="{Binding SaveCommand}" Width="80" Margin="5"/>
+        </StackPanel>
+    </Grid>
+</Window>

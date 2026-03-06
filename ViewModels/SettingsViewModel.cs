@@ -2,7 +2,6 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
 using DeepSeekSurveyAnalyzer.Models;
-using DeepSeekSurveyAnalyzer.Services;
 using DeepSeekSurveyAnalyzer.Services.Abstractions;
 
 namespace DeepSeekSurveyAnalyzer.ViewModels;
@@ -10,6 +9,7 @@ namespace DeepSeekSurveyAnalyzer.ViewModels;
 public class SettingsViewModel : INotifyPropertyChanged
 {
     private readonly ISettingsService _settingsService;
+    private readonly ILoggingService _logger;
     private string _apiKey = string.Empty;
     private string _endpoint = string.Empty;
     private string _model = string.Empty;
@@ -18,33 +18,50 @@ public class SettingsViewModel : INotifyPropertyChanged
     public string ApiKey
     {
         get => _apiKey;
-        set { _apiKey = value; OnPropertyChanged(); }
+        set
+        {
+            _apiKey = value;
+            OnPropertyChanged();
+        }
     }
 
     public string Endpoint
     {
         get => _endpoint;
-        set { _endpoint = value; OnPropertyChanged(); }
+        set
+        {
+            _endpoint = value;
+            OnPropertyChanged();
+        }
     }
 
     public string Model
     {
         get => _model;
-        set { _model = value; OnPropertyChanged(); }
+        set
+        {
+            _model = value;
+            OnPropertyChanged();
+        }
     }
 
     public string LogLevel
     {
         get => _logLevel;
-        set { _logLevel = value; OnPropertyChanged(); }
+        set
+        {
+            _logLevel = value;
+            OnPropertyChanged();
+        }
     }
 
     public ICommand SaveCommand { get; }
     public ICommand CancelCommand { get; }
 
-    public SettingsViewModel(ISettingsService settingsService)
+    public SettingsViewModel(ISettingsService settingsService, ILoggingService logger)
     {
         _settingsService = settingsService;
+        _logger = logger;
 
         var settings = settingsService.Load();
         ApiKey = settings.ApiKey;
@@ -60,16 +77,14 @@ public class SettingsViewModel : INotifyPropertyChanged
 
     private void Save()
     {
-        var settings = new AppSettings
-        {
-            ApiKey = ApiKey,
-            Endpoint = Endpoint,
-            Model = Model,
-            LogLevel = LogLevel,
-            PromptText = _settingsService.Load().PromptText
-        };
+        var settings = _settingsService.Load();
+        settings.ApiKey = ApiKey;
+        settings.Endpoint = Endpoint;
+        settings.Model = Model;
+        settings.LogLevel = LogLevel;
+        
         _settingsService.Save(settings);
-        LoggingService.LogInformation("Настройки сохранены");
+        _logger.Information("Настройки сохранены");
         Close?.Invoke();
     }
 

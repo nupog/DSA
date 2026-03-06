@@ -1,16 +1,20 @@
+using System;
+using System.IO;
 using System.Text.Json;
 using DeepSeekSurveyAnalyzer.Models;
 using DeepSeekSurveyAnalyzer.Services.Abstractions;
-using System.IO;
 
 namespace DeepSeekSurveyAnalyzer.Services;
 
 public class SettingsService : ISettingsService, IConfigurationService
 {
     private readonly string _settingsPath;
+    private readonly ILoggingService _logger;
+    private AppSettings? _cachedSettings;
 
-    public SettingsService()
+    public SettingsService(ILoggingService logger)
     {
+        _logger = logger;
         var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         var appFolder = Path.Combine(appData, "DeepSeekSurveyAnalyzer");
         Directory.CreateDirectory(appFolder);
@@ -19,19 +23,26 @@ public class SettingsService : ISettingsService, IConfigurationService
 
     public AppSettings Load()
     {
+        if (_cachedSettings != null)
+            return _cachedSettings;
+
         try
         {
             if (!File.Exists(_settingsPath))
-                return new AppSettings();
+                return _cachedSettings = new AppSettings();
+            
             var json = File.ReadAllText(_settingsPath);
             var settings = JsonSerializer.Deserialize<AppSettings>(json) ?? new AppSettings();
+            
             if (!string.IsNullOrEmpty(settings.ApiKey))
                 settings.ApiKey = SecureStorage.Decrypt(settings.ApiKey);
-            return settings;
+                
+            return _cachedSettings = settings;
         }
         catch (Exception ex)
         {
-            throw;
+            _logger.Error(ex, "Ошибка загрузки настроек");
+            return _cachedSettings = new AppSettings();
         }
     }
 
@@ -43,22 +54,27 @@ public class SettingsService : ISettingsService, IConfigurationService
             {
                 Endpoint = settings.Endpoint,
                 PromptText = settings.PromptText,
+                SwotPromptText = settings.SwotPromptText,
                 Model = settings.Model,
                 LogLevel = settings.LogLevel,
-                ApiKey = string.IsNullOrEmpty(settings.ApiKey) ? string.Empty : SecureStorage.Encrypt(settings.ApiKey)
+                ApiKey = string.IsNullOrEmpty(settings.ApiKey) 
+                    ? string.Empty 
+                    : SecureStorage.Encrypt(settings.ApiKey)
             };
+            
             var json = JsonSerializer.Serialize(toSave, new JsonSerializerOptions { WriteIndented = true });
             File.WriteAllText(_settingsPath, json);
+            _cachedSettings = settings;
         }
         catch (Exception ex)
         {
+            _logger.Error(ex, "Ошибка сохранения настроек");
             throw;
         }
     }
-    
 
     // Реализация IConfigurationService
-    string IConfigurationService.GetLogLevel()
+    public string GetLogLevel()
     {
         return Load().LogLevel;
     }

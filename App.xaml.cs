@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using DeepSeekSurveyAnalyzer.Services;
@@ -6,63 +6,56 @@ using DeepSeekSurveyAnalyzer.Services.Abstractions;
 using DeepSeekSurveyAnalyzer.ViewModels;
 using DeepSeekSurveyAnalyzer.Views;
 
-namespace DeepSeekSurveyAnalyzer;
-
-public partial class App : Application
+namespace DeepSeekSurveyAnalyzer
 {
-    private readonly ServiceProvider _serviceProvider;
-
-    public App()
+    public partial class App : Application
     {
-        var services = new ServiceCollection();
-        ConfigureServices(services);
-        _serviceProvider = services.BuildServiceProvider();
-        LoggingService.Init(_serviceProvider.GetRequiredService<IConfigurationService>());
-    }
+        private readonly ServiceProvider _serviceProvider;
 
-    private void ConfigureServices(IServiceCollection services)
-    {
-        // Регистрируем SettingsService как синглтон
-        services.AddSingleton<SettingsService>();
-        
-        // Регистрируем интерфейсы, используя один и тот же экземпляр
-        services.AddSingleton<ISettingsService>(sp => sp.GetRequiredService<SettingsService>());
-        services.AddSingleton<IConfigurationService>(sp => sp.GetRequiredService<SettingsService>());
-        
-        // Остальные сервисы
-        services.AddSingleton<IHistoryService, HistoryService>();
-        services.AddSingleton<FileReaderFactory>();
-
-        // ViewModels
-        services.AddSingleton<MainViewModel>();
-        services.AddSingleton<SettingsViewModel>();
-
-        // HttpClient + сервис DeepSeek
-        services.AddHttpClient<IDeepSeekService, DeepSeekService>(client =>
+        public App()
         {
-            client.Timeout = TimeSpan.FromMinutes(5);
-        });
-    }
+            var services = new ServiceCollection();
+            ConfigureServices(services);
+            _serviceProvider = services.BuildServiceProvider();
+        }
 
-    protected override void OnStartup(StartupEventArgs e)
-    {
-        base.OnStartup(e);
-        try
+        private void ConfigureServices(IServiceCollection services)
         {
-            var mainWindow = new Views.MainWindow
+            services.AddSingleton<SettingsService>();
+            services.AddSingleton<ISettingsService>(sp => sp.GetRequiredService<SettingsService>());
+            services.AddSingleton<IConfigurationService>(sp => sp.GetRequiredService<SettingsService>());
+            services.AddSingleton<ILoggingService, LoggingService>();
+            services.AddSingleton<IHistoryService, HistoryService>();
+            services.AddSingleton<FileReaderFactory>();
+            services.AddSingleton<IDeepSeekService, DeepSeekService>();
+            services.AddSingleton<AnalysisService>();
+            services.AddSingleton<MainViewModel>();
+            services.AddSingleton<SettingsViewModel>();
+            services.AddSingleton<ResponseViewModel>();
+            services.AddTransient<PromptSettingsViewModel>();
+            services.AddTransient<SwotAnalysisViewModel>();
+            services.AddHttpClient<IDeepSeekService, DeepSeekService>(client =>
             {
-                DataContext = _serviceProvider.GetRequiredService<MainViewModel>()
-            };
-            mainWindow.Show();
+                client.Timeout = TimeSpan.FromMinutes(5);
+            });
         }
-        catch (Exception ex)
+
+        protected override void OnStartup(StartupEventArgs e)
         {
-            MessageBox.Show($"Ошибка при запуске: {ex.Message}\n\n{ex.StackTrace}", 
-                "Критическая ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-            Shutdown();
+            base.OnStartup(e);
+            try
+            {
+                var mainWindow = new MainWindow
+                {
+                    DataContext = _serviceProvider.GetRequiredService<MainViewModel>()
+                };
+                mainWindow.Show();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                Shutdown();
+            }
         }
     }
-
-    public static new App Current => (App)Application.Current;
-    public IServiceProvider Services => _serviceProvider;
 }

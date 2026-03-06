@@ -1,7 +1,5 @@
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -13,17 +11,15 @@ using DeepSeekSurveyAnalyzer.Services.Abstractions;
 
 namespace DeepSeekSurveyAnalyzer.ViewModels;
 
-public class ResponseViewModel : INotifyPropertyChanged
+public class SwotAnalysisViewModel : INotifyPropertyChanged
 {
     private readonly IDeepSeekService _deepSeek;
     private readonly ILoggingService _logger;
-    private readonly IHistoryService _historyService;
     private readonly ChatRequest _request;
-    private readonly List<string> _files;
     private readonly AnalysisResult _analysisResult;
     private CancellationTokenSource? _cts;
     private string _reasoning = string.Empty;
-    private string _answer = string.Empty;
+    private string _swotAnalysis = string.Empty;
     private bool _isCompleted;
     private bool _isCancelled;
 
@@ -37,15 +33,15 @@ public class ResponseViewModel : INotifyPropertyChanged
         }
     }
 
-    public string Answer
+    public string SwotAnalysis
     {
-        get => _answer;
+        get => _swotAnalysis;
         private set
         {
-            _answer = value;
+            _swotAnalysis = value;
             OnPropertyChanged();
             if (_analysisResult != null)
-                _analysisResult.AnalysisText = value;
+                _analysisResult.SwotAnalysis = value;
         }
     }
 
@@ -56,7 +52,7 @@ public class ResponseViewModel : INotifyPropertyChanged
         {
             _isCompleted = value;
             OnPropertyChanged();
-            ((RelayCommand)SaveAnswerCommand).RaiseCanExecuteChanged();
+            ((RelayCommand)SaveCommand).RaiseCanExecuteChanged();
         }
     }
 
@@ -71,25 +67,17 @@ public class ResponseViewModel : INotifyPropertyChanged
     }
 
     public ICommand CancelCommand { get; }
-    public ICommand SaveAnswerCommand { get; }
+    public ICommand SaveCommand { get; }
 
-    public ResponseViewModel(
-        IDeepSeekService deepSeek, 
-        ILoggingService logger, 
-        ChatRequest request, 
-        IHistoryService historyService, 
-        List<string> files,
-        AnalysisResult analysisResult)
+    public SwotAnalysisViewModel(IDeepSeekService deepSeek, ILoggingService logger, ChatRequest request, AnalysisResult analysisResult)
     {
         _deepSeek = deepSeek;
         _logger = logger;
-        _historyService = historyService;
         _request = request;
-        _files = files;
         _analysisResult = analysisResult;
 
         CancelCommand = new RelayCommand(Cancel, () => !IsCompleted && !IsCancelled);
-        SaveAnswerCommand = new RelayCommand(SaveAnswer, () => IsCompleted && !string.IsNullOrWhiteSpace(Answer));
+        SaveCommand = new RelayCommand(Save, () => IsCompleted && !string.IsNullOrWhiteSpace(SwotAnalysis));
 
         _ = StartReceivingAsync();
     }
@@ -100,7 +88,7 @@ public class ResponseViewModel : INotifyPropertyChanged
         try
         {
             var reasoningBuilder = new StringBuilder();
-            var answerBuilder = new StringBuilder();
+            var swotBuilder = new StringBuilder();
 
             await foreach (var chunk in _deepSeek.StreamChatAsync(_request, _cts.Token))
             {
@@ -112,38 +100,26 @@ public class ResponseViewModel : INotifyPropertyChanged
                     reasoningBuilder.Append(delta.ReasoningContent);
                     Reasoning = reasoningBuilder.ToString();
                     if (_analysisResult != null)
-                        _analysisResult.ReasoningText = Reasoning;
+                        _analysisResult.SwotReasoning = Reasoning;
                 }
 
                 if (!string.IsNullOrEmpty(delta.Content))
                 {
-                    answerBuilder.Append(delta.Content);
-                    Answer = answerBuilder.ToString();
+                    swotBuilder.Append(delta.Content);
+                    SwotAnalysis = swotBuilder.ToString();
                 }
             }
 
             IsCompleted = true;
-
-            // Сохраняем историю
-            var entry = new HistoryEntry
-            {
-                Timestamp = DateTime.Now,
-                Prompt = _request.Messages.Last(m => m.Role == "user").Content,
-                Reasoning = Reasoning,
-                Answer = Answer,
-                Model = _request.Model,
-                Files = _files
-            };
-            await _historyService.SaveEntryAsync(entry);
         }
         catch (OperationCanceledException)
         {
             IsCancelled = true;
-            _logger.Information("Запрос отменён пользователем");
+            _logger.Information("SWOT-анализ отменён пользователем");
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Ошибка при получении ответа");
+            _logger.Error(ex, "Ошибка при получении SWOT-анализа");
             System.Windows.MessageBox.Show($"Ошибка: {ex.Message}", "Ошибка", 
                 System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             IsCancelled = true;
@@ -155,26 +131,26 @@ public class ResponseViewModel : INotifyPropertyChanged
         _cts?.Cancel();
     }
 
-    private void SaveAnswer()
+    private void Save()
     {
         var dialog = new Microsoft.Win32.SaveFileDialog
         {
             Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*",
             DefaultExt = "txt",
-            FileName = "response.txt"
+            FileName = "swot_analysis.txt"
         };
         if (dialog.ShowDialog() == true)
         {
             try
             {
-                var content = $"=== РАЗМЫШЛЕНИЯ ===\n{Reasoning}\n\n=== ОТВЕТ ===\n{Answer}";
-                File.WriteAllText(dialog.FileName, content, Encoding.UTF8);
-                System.Windows.MessageBox.Show("Ответ сохранён.", "Успех", 
+                var content = $"=== SWOT-АНАЛИЗ ===\n{SwotAnalysis}\n\n=== РАЗМЫШЛЕНИЯ ===\n{Reasoning}";
+                System.IO.File.WriteAllText(dialog.FileName, content, Encoding.UTF8);
+                System.Windows.MessageBox.Show("SWOT-анализ сохранён.", "Успех", 
                     System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, "Ошибка сохранения файла");
+                _logger.Error(ex, "Ошибка сохранения SWOT-анализа");
                 System.Windows.MessageBox.Show($"Ошибка сохранения: {ex.Message}", "Ошибка", 
                     System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             }

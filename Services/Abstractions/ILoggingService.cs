@@ -1,3 +1,5 @@
+using System;
+
 namespace DeepSeekSurveyAnalyzer.Services.Abstractions;
 
 public interface ILoggingService

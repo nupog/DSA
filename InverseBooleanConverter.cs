@@ -2,17 +2,18 @@ using System;
 using System.Globalization;
 using System.Windows.Data;
 
-namespace DeepSeekSurveyAnalyzer;
-
-public class InverseBooleanConverter : IValueConverter
+namespace DeepSeekSurveyAnalyzer
 {
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    public class InverseBooleanConverter : IValueConverter
     {
-        return value is bool b ? !b : value;
-    }
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return value is bool b ? !b : value;
+        }
 
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-        return value is bool b ? !b : value;
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return value is bool b ? !b : value;
+        }
     }
 }

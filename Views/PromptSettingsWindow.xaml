@@ -1,0 +1,36 @@
+<Window x:Class="DeepSeekSurveyAnalyzer.Views.PromptSettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="{Binding WindowTitle}" Height="400" Width="600"
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="Введите текст промта, который будет отправляться в ИИ:" 
+                   TextWrapping="Wrap" Margin="0,0,0,10"/>
+
+        <TextBox Grid.Row="1" 
+                 Text="{Binding PromptText, UpdateSourceTrigger=PropertyChanged}" 
+                 AcceptsReturn="True" 
+                 TextWrapping="Wrap"
+                 VerticalScrollBarVisibility="Auto"
+                 Margin="0,0,0,10"
+                 FontSize="12"/>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="Сохранить" 
+                    Command="{Binding SaveCommand}" 
+                    Width="100" Height="30" 
+                    Margin="0,0,10,0"
+                    IsDefault="True"/>
+            <Button Content="Отмена" 
+                    Command="{Binding CancelCommand}" 
+                    Width="100" Height="30"
+                    IsCancel="True"/>
+        </StackPanel>
+    </Grid>
+</Window>

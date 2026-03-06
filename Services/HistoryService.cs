@@ -1,24 +1,24 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Text.Json;
+using System.Threading.Tasks;
 using Microsoft.Data.Sqlite;
 using DeepSeekSurveyAnalyzer.Models;
 using DeepSeekSurveyAnalyzer.Services.Abstractions;
-using System.IO;
 
 namespace DeepSeekSurveyAnalyzer.Services;
 
 public class HistoryService : IHistoryService
 {
     private readonly string _connectionString;
+    private readonly ILoggingService _logger;
 
-    public HistoryService()
+    public HistoryService(ILoggingService logger)
     {
+        _logger = logger;
         var dbPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                                     "DeepSeekSurveyAnalyzer", "history.db");
-        var dbDir = Path.GetDirectoryName(dbPath);
-        if (!string.IsNullOrEmpty(dbDir))
-        {
-            Directory.CreateDirectory(dbDir);
-        }
         _connectionString = $"Data Source={dbPath}";
         InitializeDatabase();
     }
@@ -61,7 +61,7 @@ public class HistoryService : IHistoryService
         }
         catch (Exception ex)
         {
-            LoggingService.LogError(ex, "Ошибка сохранения истории");
+            _logger.Error(ex, "Ошибка сохранения истории");
         }
     }
 
@@ -83,18 +83,16 @@ public class HistoryService : IHistoryService
                     Id = reader.GetInt32(0),
                     Timestamp = DateTime.Parse(reader.GetString(1)),
                     Prompt = reader.GetString(2),
-                    Reasoning = reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
-                    Answer = reader.IsDBNull(4) ? string.Empty : reader.GetString(4),
-                    Model = reader.IsDBNull(5) ? string.Empty : reader.GetString(5),
-                    Files = reader.IsDBNull(6) || string.IsNullOrWhiteSpace(reader.GetString(6))
-                        ? new List<string>()
-                        : (JsonSerializer.Deserialize<List<string>>(reader.GetString(6)) ?? new List<string>())
+                    Reasoning = reader.GetString(3),
+                    Answer = reader.GetString(4),
+                    Model = reader.GetString(5),
+                    Files = JsonSerializer.Deserialize<List<string>>(reader.GetString(6)) ?? new()
                 });
             }
         }
         catch (Exception ex)
         {
-            LoggingService.LogError(ex, "Ошибка загрузки истории");
+            _logger.Error(ex, "Ошибка загрузки истории");
         }
         return entries;
     }
